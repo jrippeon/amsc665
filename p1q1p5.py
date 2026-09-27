@@ -1,6 +1,8 @@
 import numpy as np
 import cheb
 
+from scipy.interpolate import BarycentricInterpolator
+
 import matplotlib
 matplotlib.use('Qt5Agg')
 import matplotlib.pyplot as plt
@@ -52,25 +54,26 @@ def p5(N):
 
     return u
 
+def poly_error(x, y, f, M=1000):
+    '''
+    Return the max error of the polynomial interpolating x and y at approximating the function f.
+    Samples at M points.
+    '''
+    p= BarycentricInterpolator(x,y)
+    x_dense= np.linspace(np.min(x), np.max(x), M)
+    y_dense= p(x_dense)
+    y_exact= f(x_dense)
 
-# N=100
-
-# x= cheb.get_nodes(N)
-# u= p5(N)
-# u_exact= np.cos(np.pi * x) + 1
-# plt.plot(x, u)
-# plt.plot(x, u_exact)
-# plt.show()
+    return np.max(np.abs(y_dense - y_exact))
 
 test_N_values= np.arange(3, 50, 1)
 errors= np.zeros_like(test_N_values, dtype=float)
+f= lambda x : np.cos(np.pi * x) + 1
 
 for i, N in enumerate(test_N_values):
     x= cheb.get_nodes(N)
     u= p5(N)
-    u_exact= np.cos(np.pi * x) + 1
-    e= np.abs(u - u_exact)
-    errors[i]= np.max(e)
+    errors[i]= poly_error(x, u, f)
 
 plt.semilogy(test_N_values, errors)
 plt.xlabel('N')
